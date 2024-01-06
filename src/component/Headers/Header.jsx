@@ -1,6 +1,12 @@
 import { MdLocationOn } from "react-icons/md";
 import { HiCalendar, HiMinus, HiPlus, HiSearch } from "react-icons/hi";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import useOutsideClick from "../../hooks/useOutsideClick";
+import "react-date-range/dist/styles.css"; // main style file
+import "react-date-range/dist/theme/default.css"; // theme css file
+import { DateRange } from "react-date-range";
+import { format } from "date-fns";
+
 function Header() {
   const [destination, setDestination] = useState("");
   const [openOptions, setOpenOptions] = useState(false);
@@ -9,6 +15,14 @@ function Header() {
     children: 0,
     room: 1,
   });
+  const [date, setDate] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: "selection",
+    },
+  ]);
+  const [openDate, setOpenDate] = useState(false);
 
   const handleOptions = (name, operation) => {
     setOptions((prev) => {
@@ -37,15 +51,31 @@ function Header() {
         </div>
         <div className="headerSearchItem">
           <HiCalendar className="headerIcon dateIcon" />
-          <div className="dateDropDown">2023/06/20</div>
+          <div className="dateDropDown" onClick={() => setOpenDate(!openDate)}>
+            {`${format(date[0].startDate, "mm/dd/yyyy")} to ${format(date[0].endDate, "mm/dd/yyyy")} `}
+          </div>
+          {openDate && (
+            <DateRange
+              ranges={date}
+              onChange={(item) => setDate([item.selection])}
+              className="date"
+              minDate={new Date()}
+              moveRangeOnFirstSelection={true}
+            />
+          )}
           <span className="seperator"></span>
         </div>
         <div className="headerSearchItem">
-          <div id="optionDropDown" onClick={() => setOpenOptions(true)}>
-            {options.adult} adult &bull; {options.children} children &bull; {options.room} room
+          <div id="optionDropDown" onClick={() => setOpenOptions(!openOptions)}>
+            {options.adult} adult &bull; {options.children} children &bull;{" "}
+            {options.room} room
           </div>
           {openOptions && (
-            <GetOptionList handleOptions={handleOptions} options={options} />
+            <GetOptionList
+              setOpenOptions={setOpenOptions}
+              handleOptions={handleOptions}
+              options={options}
+            />
           )}
           <span className="seperator"></span>
         </div>
@@ -61,9 +91,11 @@ function Header() {
 
 export default Header;
 
-function GetOptionList({ options, handleOptions }) {
+function GetOptionList({ options, handleOptions, setOpenOptions }) {
+  const optionsRef = useRef();
+  useOutsideClick(optionsRef, "optionDropDown", () => setOpenOptions(false));
   return (
-    <div className="guestOptions">
+    <div className="guestOptions" ref={optionsRef}>
       <OptionItem
         handleOptions={handleOptions}
         type="adult"
@@ -99,7 +131,10 @@ function OptionItem({ type, options, minLimit, handleOptions }) {
           <HiMinus className="icon" />
         </button>
         <span className="optionCounterNumber">{options[type]}</span>
-        <button className="optionCounterBtn" onClick={() => handleOptions(type, "inc")}>
+        <button
+          className="optionCounterBtn"
+          onClick={() => handleOptions(type, "inc")}
+        >
           <HiPlus className="icon" />
         </button>
       </div>

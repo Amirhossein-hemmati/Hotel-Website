@@ -6,6 +6,7 @@ import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
+import { createSearchParams, useNavigate, useSearchParams } from "react-router-dom";
 
 function Header() {
   const [destination, setDestination] = useState("");
@@ -24,6 +25,8 @@ function Header() {
   ]);
   const [openDate, setOpenDate] = useState(false);
 
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const handleOptions = (name, operation) => {
     setOptions((prev) => {
       return {
@@ -31,6 +34,15 @@ function Header() {
         [name]: operation === "inc" ? options[name] + 1 : options[name] - 1,
       };
     });
+  };
+
+  const handleSearch = () => {
+    createSearchParams({
+      date: JSON.stringify(date),
+      destination,
+      options: JSON.stringify(options)
+    })
+    navigate("/hotels");
   };
 
   return (
@@ -52,7 +64,10 @@ function Header() {
         <div className="headerSearchItem">
           <HiCalendar className="headerIcon dateIcon" />
           <div className="dateDropDown" onClick={() => setOpenDate(!openDate)}>
-            {`${format(date[0].startDate, "mm/dd/yyyy")} to ${format(date[0].endDate, "mm/dd/yyyy")} `}
+            {`${format(date[0].startDate, "mm/dd/yyyy")} to ${format(
+              date[0].endDate,
+              "mm/dd/yyyy"
+            )} `}
           </div>
           {openDate && (
             <DateRange
@@ -80,7 +95,7 @@ function Header() {
           <span className="seperator"></span>
         </div>
         <div className="headerSearchItem">
-          <button className="headerSearchBtn">
+          <button className="headerSearchBtn" onClick={handleSearch}>
             <HiSearch className="headerIcon" />
           </button>
         </div>
